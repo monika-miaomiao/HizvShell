@@ -1,5 +1,6 @@
 package com.hizv.shell.ui.screen
 
+import android.graphics.drawable.Drawable
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -24,6 +25,7 @@ import com.hizv.shell.repository.AppRepository
 import com.hizv.shell.shizuku.ShellRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.core.graphics.drawable.toBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,9 +39,12 @@ fun AppsScreen() {
     var loading by remember { mutableStateOf(true) }
     var selectedApp by remember { mutableStateOf<AppInfo?>(null) }
 
+    // 后台加载应用列表
     LaunchedEffect(showSystem) {
         loading = true
-        apps = AppRepository.getInstalledApps(context, includeSystem = showSystem)
+        apps = withContext(Dispatchers.IO) {
+            AppRepository.getInstalledApps(context, includeSystem = showSystem)
+        }
         loading = false
     }
 
@@ -124,7 +129,11 @@ fun AppsScreen() {
                             val r = ShellRunner.exec(cmd)
                             scope.launch(Dispatchers.Main) {
                                 Toast.makeText(context, r.output.ifBlank { "完成" }, Toast.LENGTH_SHORT).show()
-                                apps = AppRepository.getInstalledApps(context, includeSystem = showSystem)
+                                loading = true
+                                apps = withContext(Dispatchers.IO) {
+                                    AppRepository.getInstalledApps(context, includeSystem = showSystem)
+                                }
+                                loading = false
                             }
                         }
                         selectedApp = null
@@ -136,7 +145,11 @@ fun AppsScreen() {
                             val r = ShellRunner.exec("pm uninstall --user 0 ${app.packageName}")
                             scope.launch(Dispatchers.Main) {
                                 Toast.makeText(context, r.output.ifBlank { "完成" }, Toast.LENGTH_SHORT).show()
-                                apps = AppRepository.getInstalledApps(context, includeSystem = showSystem)
+                                loading = true
+                                apps = withContext(Dispatchers.IO) {
+                                    AppRepository.getInstalledApps(context, includeSystem = showSystem)
+                                }
+                                loading = false
                             }
                         }
                         selectedApp = null
@@ -152,13 +165,22 @@ fun AppsScreen() {
 
 @Composable
 private fun AppRow(app: AppInfo, onAction: () -> Unit) {
+    val context = LocalContext.current
+    var icon by remember { mutableStateOf<Drawable?>(null) }
+
+    LaunchedEffect(app.packageName) {
+        icon = withContext(Dispatchers.IO) {
+            AppRepository.getIcon(context, app.packageName)
+        }
+    }
+
     ListItem(
         headlineContent = { Text(app.label, fontWeight = FontWeight.Medium) },
         supportingContent = { Text(app.packageName, style = MaterialTheme.typography.bodySmall) },
         leadingContent = {
-            app.icon?.let { icon ->
+            icon?.let {
                 Image(
-                    bitmap = icon.toBitmap().asImageBitmap(),
+                    bitmap = it.toBitmap().asImageBitmap(),
                     contentDescription = app.label,
                     modifier = Modifier
                         .size(40.dp)
@@ -178,5 +200,5 @@ private fun AppRow(app: AppInfo, onAction: () -> Unit) {
         },
         modifier = Modifier.clickable { onAction() }
     )
-    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
 }

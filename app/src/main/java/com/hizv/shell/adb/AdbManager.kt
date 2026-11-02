@@ -1,10 +1,6 @@
 package com.hizv.shell.adb
 
 import android.content.Context
-import android.net.wifi.WifiManager
-import java.net.InetAddress
-import java.net.NetworkInterface
-import java.net.Socket
 
 /**
  * 自管理 ADB 连接 — 不依赖 Shizuku。
@@ -22,9 +18,18 @@ object AdbManager {
     var errorMsg: String = ""
         private set
 
-    private val client = AdbTcpClient()
+    private var client: AdbTcpClient? = null
 
-    val isConnected: Boolean get() = state == State.CONNECTED && client.isConnected
+    val isConnected: Boolean get() = state == State.CONNECTED && client?.isConnected == true
+
+    /**
+     * 初始化（必须在 Application.onCreate 或首次使用前调用）。
+     */
+    fun init(context: Context) {
+        if (client == null) {
+            client = AdbTcpClient(context.applicationContext)
+        }
+    }
 
     /**
      * 连接到 localhost:port。
@@ -33,7 +38,8 @@ object AdbManager {
         state = State.CONNECTING
         errorMsg = ""
         return try {
-            val ok = client.connect("localhost", port)
+            val c = client ?: throw IllegalStateException("AdbManager.init() 未调用")
+            val ok = c.connect("localhost", port)
             state = if (ok) State.CONNECTED else State.ERROR
             if (!ok) errorMsg = "连接失败，请确认无线调试已开启且端口正确"
             ok
@@ -44,26 +50,19 @@ object AdbManager {
         }
     }
 
-    /**
-     * 断开连接。
-     */
     fun disconnect() {
-        client.disconnect()
+        client?.disconnect()
         state = State.IDLE
     }
 
-    /**
-     * 执行 shell 命令。
-     */
     fun exec(command: String): String {
         if (!isConnected) return "错误: ADB 未连接"
         return try {
-            client.exec(command)
+            client!!.exec(command)
         } catch (e: Exception) {
             state = State.ERROR
             errorMsg = e.message ?: "执行失败"
             "错误: ${e.message}"
         }
     }
-
 }

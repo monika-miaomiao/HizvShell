@@ -49,6 +49,8 @@ dependencies {
     implementation(libs.androidx.documentfile)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
+    implementation("org.bouncycastle:bcprov-jdk15to18:1.78.1")
+    implementation("org.bouncycastle:bcpkix-jdk15to18:1.78.1")
     debugImplementation(libs.androidx.ui.tooling)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

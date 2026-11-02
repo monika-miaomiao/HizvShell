@@ -147,6 +147,8 @@ fun SettingsScreen() {
         // 更新检查
         val updateInfo = com.hizv.shell.shizuku.UpdateChecker.updateInfo
         var checkingUpdate by remember { mutableStateOf(false) }
+        var downloadProgress by remember { mutableStateOf(0) }
+        var downloading by remember { mutableStateOf(false) }
         Card(
             shape = MaterialTheme.shapes.large,
             colors = CardDefaults.cardColors(
@@ -174,9 +176,30 @@ fun SettingsScreen() {
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(Modifier.height(4.dp))
-                        Button(onClick = {
-                            com.hizv.shell.shizuku.UpdateChecker.openDownload(context, info.downloadUrl)
-                        }) { Text("前往下载") }
+                        if (downloadProgress > 0 && downloadProgress < 100) {
+                            LinearProgressIndicator(
+                                progress = { downloadProgress / 100f },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text("下载中… $downloadProgress%", style = MaterialTheme.typography.bodySmall)
+                        } else if (downloadProgress == 100) {
+                            Text("下载完成，正在安装…", style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary)
+                        } else {
+                            Button(onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    downloading = true
+                                    com.hizv.shell.download.AppDownloader.downloadAndInstall(
+                                        context,
+                                        info.downloadUrl
+                                    ) { p, _, _ ->
+                                        downloadProgress = p
+                                    }
+                                    downloading = false
+                                }
+                            }) { Text("应用内下载并安装") }
+                        }
                     } else {
                         Text("已是最新版本", style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)

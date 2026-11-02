@@ -88,15 +88,19 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) { padding ->
-                        NavHost(
-                            navController = navController,
-                            startDestination = "home",
-                            modifier = Modifier.padding(padding)
-                        ) {
-                            composable("home") { HomeScreen() }
-                            composable("terminal") { TerminalScreen() }
-                            composable("apps") { AppsScreen() }
-                            composable("settings") { SettingsScreen() }
+                        if (com.hizv.shell.shizuku.ShizukuManager.state != com.hizv.shell.shizuku.ShizukuManager.State.READY) {
+                            ActivationScreen()
+                        } else {
+                            NavHost(
+                                navController = navController,
+                                startDestination = "home",
+                                modifier = Modifier.padding(padding)
+                            ) {
+                                composable("home") { HomeScreen() }
+                                composable("terminal") { TerminalScreen() }
+                                composable("apps") { AppsScreen() }
+                                composable("settings") { SettingsScreen() }
+                            }
                         }
                     }
                 }

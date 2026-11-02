@@ -208,7 +208,7 @@ fun SettingsScreen() {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("关于 HizvShell", fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(8.dp))
-                Text("版本: v1.1.0", style = MaterialTheme.typography.bodySmall)
+                Text("版本: v${com.hizv.shell.shizuku.UpdateChecker.CURRENT_VERSION}", style = MaterialTheme.typography.bodySmall)
                 Text("基于 Shizuku API 13.1.5", style = MaterialTheme.typography.bodySmall)
                 Text("无需 Root 的 Shell 权限管理器", style = MaterialTheme.typography.bodySmall)
             }

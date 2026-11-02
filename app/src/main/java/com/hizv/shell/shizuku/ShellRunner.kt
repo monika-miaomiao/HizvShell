@@ -1,13 +1,15 @@
 package com.hizv.shell.shizuku
 
+import com.hizv.shell.adb.AdbManager
 import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.reflect.Method
 
 /**
- * 通过 Shizuku 执行 shell 命令。
- * 关键：设置正确的 apex linker 环境变量，不能覆盖 LD_LIBRARY_PATH。
+ * Shell 命令执行器。
+ * 优先使用自连 ADB (AdbManager)，未连接时回退到 Shizuku。
+ * 关键：设置正确的 apex linker 环境变量，不碰 LD_LIBRARY_PATH。
  */
 object ShellRunner {
 
@@ -25,7 +27,6 @@ object ShellRunner {
         val output: String
     )
 
-    /** 最小化环境：只设 apex root + PATH，不碰 LD_LIBRARY_PATH */
     private val shellEnv: Array<String> = arrayOf(
         "ANDROID_RUNTIME_ROOT=/apex/com.android.runtime",
         "ANDROID_TZDATA_ROOT=/apex/com.android.tzdata",
@@ -43,6 +44,12 @@ object ShellRunner {
     }
 
     fun exec(command: String): Result {
+        // 优先用自连 ADB
+        if (AdbManager.isConnected) {
+            val out = AdbManager.exec(command)
+            return Result(0, out)
+        }
+        // 回退到 Shizuku
         return try {
             val process = spawnProcess(arrayOf("sh", "-c", command))
             val stdout = BufferedReader(InputStreamReader(process.inputStream)).readText()
@@ -61,6 +68,16 @@ object ShellRunner {
     }
 
     fun execStreaming(command: String, onLine: (String) -> Unit, onDone: (Int) -> Unit) {
+        // 自连 ADB 模式
+        if (AdbManager.isConnected) {
+            Thread {
+                val out = AdbManager.exec(command)
+                out.lines().forEach { onLine(it) }
+                onDone(0)
+            }.start()
+            return
+        }
+        // Shizuku 模式
         try {
             val process = spawnProcess(arrayOf("sh", "-c", command))
             val reader = BufferedReader(InputStreamReader(process.inputStream))

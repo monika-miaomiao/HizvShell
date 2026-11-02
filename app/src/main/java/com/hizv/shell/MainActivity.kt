@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) { padding ->
-                        if (com.hizv.shell.shizuku.ShizukuManager.state != com.hizv.shell.shizuku.ShizukuManager.State.READY) {
+                        if (!com.hizv.shell.adb.AdbManager.isConnected) {
                             ActivationScreen()
                         } else {
                             NavHost(

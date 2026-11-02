@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">HizvShell</string>
+    <string name="shizuku_not_running">Shizuku 未运行</string>
+    <string name="shizuku_running">Shizuku 已连接</string>
+    <string name="shizuku_permission_denied">Shizuku 权限未授予</string>
+    <string name="request_permission">授予 Shizuku 权限</string>
+    <string name="interactive_shell">交互式 Shell</string>
+    <string name="app_manager">应用管理</string>
+    <string name="install_apk">安装 APK</string>
+    <string name="device_admin">设备管理员</string>
+    <string name="freeze">冻结</string>
+    <string name="unfreeze">解冻</string>
+    <string name="uninstall">卸载</string>
+    <string name="enable">启用</string>
+    <string name="disable">停用</string>
+    <string name="permission_mgr">权限管理</string>
+    <string name="enter_command_hint">输入 shell 命令…</string>
+    <string name="run">执行</string>
+    <string name="clear">清空</string>
+    <string name="system_apps">系统应用</string>
+    <string name="user_apps">用户应用</string>
+    <string name="search_apps">搜索应用…</string>
+    <string name="activate_device_admin">激活设备管理员</string>
+    <string name="deactivate_device_admin">移除设备管理员</string>
+    <string name="device_admin_active">设备管理员已激活</string>
+    <string name="device_admin_inactive">设备管理员未激活</string>
+    <string name="shizuku_guide_title">如何启动 Shizuku</string>
+    <string name="shizuku_guide_step1">1. 安装 Shizuku 应用</string>
+    <string name="shizuku_guide_step2">2. 开启「开发者选项」→「无线调试」</string>
+    <string name="shizuku_guide_step3">3. 在无线调试中选择「使用配对码配对设备」</string>
+    <string name="shizuku_guide_step4">4. 在 Shizuku 应用中通过无线调试启动</string>
+    <string name="shizuku_guide_step5">5. 返回本应用并点击「授予 Shizuku 权限」</string>
+    <string name="shell_prompt">shell@hizv:~$ </string>
+</resources>

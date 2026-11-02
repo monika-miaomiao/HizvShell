@@ -173,6 +173,46 @@ fun ActivationScreen(onConnected: () -> Unit) {
 
         Spacer(Modifier.height(16.dp))
 
+        // === 纯 Shizuku 激活（不杀进程） ===
+        Card(
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("通过 Shizuku 激活", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text("直接使用 Shizuku 的 shell 权限，不杀任何进程。", fontSize = 13.sp)
+                Spacer(Modifier.height(12.dp))
+                val shizukuState = ShizukuManager.state
+                Button(
+                    onClick = {
+                        ShizukuManager.requestPermission()
+                        // 授权成功后直接进入
+                        if (ShizukuManager.state == ShizukuManager.State.READY) {
+                            onConnected()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = shizukuState != ShizukuManager.State.READY
+                ) {
+                    Text(when (shizukuState) {
+                        ShizukuManager.State.READY -> "✓ Shizuku 已连接"
+                        ShizukuManager.State.NO_PERMISSION -> "授权 Shizuku 权限"
+                        else -> "Shizuku 未运行"
+                    })
+                }
+                if (shizukuState == ShizukuManager.State.READY) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("已通过 Shizuku 获得 shell 权限", fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
         // === 方式二：Shizuku 接管 ===
         Card(
             shape = MaterialTheme.shapes.large,

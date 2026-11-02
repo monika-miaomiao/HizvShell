@@ -74,9 +74,14 @@ fun ActivationScreen(onConnected: () -> Unit) {
                 OutlinedButton(
                     onClick = {
                         try {
-                            context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
-                        } catch (_: Exception) {
+                            // 直接跳开发者选项里的无线调试
                             context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+                        } catch (_: Exception) {
+                            try {
+                                context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                    setClassName("com.android.settings", "com.android.settings.Settings\$DevelopmentSettingsActivity")
+                                })
+                            } catch (_: Exception) {}
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -158,14 +163,28 @@ fun ActivationScreen(onConnected: () -> Unit) {
                             scope.launch(Dispatchers.IO) {
                                 // 1. 获取持久 shell 权限
                                 ShellRunner.exec("appops set ${context.packageName} android:read_device_identifiers allow")
-                                // 2. 检查并杀掉 Shizuku 及其 fork 进程
-                                val forks = listOf(
-                                    "moe.shizuku.privileged.api",
-                                    "io.github.vvb2060.shizuku",
+
+                                // 2. 动态查询所有已安装的 Shizuku 变体
+                                val knownForks = listOf(
+                                    "moe.shizuku.privileged.api",   // Shizuku 官方
+                                    "af.shizuku.plus.api",           // ShizukuPlus
+                                    "com.rosan.dhizuku",             // Dhizuku
+                                    "com.frb.axmanager",             // AxManager
+                                    "io.github.vvb2060.shizuku",     // vvb2060 fork
                                 )
-                                forks.forEach { pkg ->
+                                // 运行时再用 pm list 扫描一遍，防止漏网
+                                val installedResult = ShellRunner.exec("pm list packages | grep -iE 'shizuku|dhizuku|axmanager|shevery'")
+                                val installedForks = installedResult.output.lines()
+                                    .map { it.removePrefix("package:").trim() }
+                                    .filter { it.isNotBlank() && it != context.packageName }
+                                val allToKill = (knownForks + installedForks).distinct()
+
+                                val killed = mutableListOf<String>()
+                                allToKill.forEach { pkg ->
                                     ShellRunner.exec("am force-stop $pkg")
+                                    killed.add(pkg)
                                 }
+
                                 // 3. 读取 ADB 端口并直连
                                 val portResult = ShellRunner.exec("getprop service.adb.tcp.port")
                                 val port = portResult.output.trim().toIntOrNull()
@@ -173,9 +192,9 @@ fun ActivationScreen(onConnected: () -> Unit) {
                                     AdbManager.connect(port)
                                 }
                                 takeoverMsg = if (AdbManager.isConnected) {
-                                    "接管成功！"
+                                    "接管成功！已关闭 ${killed.size} 个进程: ${killed.joinToString(", ")}"
                                 } else {
-                                    "已授权，但接管连接失败，请用方式一直连"
+                                    "已授权并清理 fork，但直连失败，请用方式一手动填端口"
                                 }
                                 if (AdbManager.isConnected) {
                                     scope.launch(Dispatchers.Main) { onConnected() }

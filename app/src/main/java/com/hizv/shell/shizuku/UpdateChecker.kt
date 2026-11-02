@@ -23,7 +23,7 @@ object UpdateChecker {
         val isUpdateAvailable: Boolean
     )
 
-    const val CURRENT_VERSION = "1.4.0"
+    const val CURRENT_VERSION = "1.4.1"
     private const val REPO_OWNER = "monika-miaomiao"
     private const val REPO_NAME = "HizvShell"
     private const val API_URL = "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"

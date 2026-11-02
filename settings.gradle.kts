@@ -18,6 +18,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven("https://maven.pkg.github.com/RikkaApps/Shizuku-API") // fallback
         maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        maven("https://jitpack.io") // Kadb
     }
 }
 

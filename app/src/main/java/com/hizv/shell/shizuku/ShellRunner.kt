@@ -13,6 +13,9 @@ import java.lang.reflect.Method
  */
 object ShellRunner {
 
+    @Volatile
+    var rootMode: Boolean = false
+
     private val newProcessMethod: Method by lazy {
         Shizuku::class.java.getDeclaredMethod(
             "newProcess",
@@ -44,6 +47,24 @@ object ShellRunner {
     }
 
     fun exec(command: String): Result {
+        // Root 模式
+        if (rootMode) {
+            return try {
+                val process = Runtime.getRuntime().exec(arrayOf("su", "-c", command))
+                val stdout = BufferedReader(InputStreamReader(process.inputStream)).readText()
+                val stderr = BufferedReader(InputStreamReader(process.errorStream)).readText()
+                val code = process.waitFor()
+                Result(code, buildString {
+                    if (stdout.isNotBlank()) append(stdout)
+                    if (stderr.isNotBlank()) {
+                        if (isNotEmpty()) append('\n')
+                        append(stderr)
+                    }
+                }.trim())
+            } catch (e: Exception) {
+                Result(-1, "Root 执行失败: ${e.message}")
+            }
+        }
         // 优先用自连 ADB
         if (AdbManager.isConnected) {
             val out = AdbManager.exec(command)
